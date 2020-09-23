@@ -90,10 +90,7 @@ class TheWhiteTello(metaclass=Singleton):
             retry += 1
         self.socket.close()
         os.kill(self.proc.pid, 9)
-        # Windows
-        # import signal
-        # os.kill(self.proc.pid, signal.CTRL_C_EVENT)
-
+        
 
     def send_command(self, command):
         logger.info({'action': 'send_command', 'command': command})
