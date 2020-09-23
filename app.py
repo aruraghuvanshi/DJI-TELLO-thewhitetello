@@ -5,8 +5,11 @@ drone = TheWhiteTello()
 
 print('\n\n\t\tPYTHON \033[1;31mUAV\033[0m CONTROLLER')
 
-drone.connect()
-drone.streamon()
+drone.connect()              # Puts the tello in the command mode
+drone.streamon()             # Enables video streaming from drone
+
+drone.startvideo()           # Starts the video feed from the drone
+
 drone.get_battery()          # Get battery level (0 - 100%)
 drone.takeoff()              # take off
 drone.forward(20)            # fly forward 20 cms
