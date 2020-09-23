@@ -14,16 +14,6 @@ DEFAULT_DISTANCE = 0.30
 DEFAULT_SPEED = 10
 DEFAULT_DEGREE = 10
 
-FRAME_X = int(960/3)
-FRAME_Y = int(720/3)
-FRAME_AREA = FRAME_X * FRAME_Y
-
-FRAME_SIZE = FRAME_AREA * 3
-FRAME_CENTER_X = FRAME_X / 2
-FRAME_CENTER_Y = FRAME_Y / 2
-
-CMD_FFMPEG = (f'ffmpeg -hwaccel auto -hwaccel_device opencl -i pipe:0 '
-              f'-pix_fmt bgr24 -s {FRAME_X}x{FRAME_Y} -f rawvideo pipe:1')
 
 
 class Singleton(type):
@@ -69,13 +59,6 @@ class TheWhiteTello(metaclass=Singleton):
         self.proc_stdout = self.proc.stdout
 
         self.video_port = 11111
-
-        # self._receive_video_thread = threading.Thread(
-        #     target=self.receive_video,
-        #     args=(self.stop_event, self.proc_stdin,
-        #           self.host_ip, self.video_port,))
-        # self._receive_video_thread.start()
-
         self.set_speed(self.speed)
 
 
