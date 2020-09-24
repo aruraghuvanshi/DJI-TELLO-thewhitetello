@@ -229,7 +229,3 @@ class TheWhiteTello(metaclass=Singleton):
             k = cv2.waitKey(30) & 0xff
             if k == 27:  # press 'ESC' to quit
                 break
-
-    # https://stackoverflow.com/questions/49233433/opencv-read-errorh264-0x8f915e0-error-while-decoding-mb-53-20-bytestream
-    # Solution to degraded video quality
-
