@@ -5,6 +5,9 @@ import socket
 import subprocess
 import threading
 import time
+import queue
+
+q = queue.Queue()
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +15,16 @@ DEFAULT_DISTANCE = 0.30
 DEFAULT_SPEED = 10
 DEFAULT_DEGREE = 10
 
+FRAME_X = int(960/3)
+FRAME_Y = int(720/3)
+FRAME_AREA = FRAME_X * FRAME_Y
+
+FRAME_SIZE = FRAME_AREA * 3
+FRAME_CENTER_X = FRAME_X / 2
+FRAME_CENTER_Y = FRAME_Y / 2
+
+CMD_FFMPEG = (f'ffmpeg -hwaccel auto -hwaccel_device opencl -i pipe:0 '
+              f'-pix_fmt bgr24 -s {FRAME_X}x{FRAME_Y} -f rawvideo pipe:1')
 
 
 class Singleton(type):
@@ -57,6 +70,7 @@ class TheWhiteTello(metaclass=Singleton):
         self.proc_stdout = self.proc.stdout
 
         self.video_port = 11111
+        self.videoflag = False
         self.set_speed(self.speed)
 
 
@@ -90,7 +104,10 @@ class TheWhiteTello(metaclass=Singleton):
             retry += 1
         self.socket.close()
         os.kill(self.proc.pid, 9)
-        
+        # Windows
+        # import signal
+        # os.kill(self.proc.pid, signal.CTRL_C_EVENT)
+
 
     def send_command(self, command):
         logger.info({'action': 'send_command', 'command': command})
@@ -181,7 +198,7 @@ class TheWhiteTello(metaclass=Singleton):
 
 
     def get_battery(self):
-        print(f"BATTERY: {self.send_command('battery?')}%")
+        print(f"\nBATTERY: {self.send_command('battery?')}%")
         return self.send_command('battery?')
 
 
@@ -193,20 +210,26 @@ class TheWhiteTello(metaclass=Singleton):
         return self.send_command('streamoff')
 
 
-    def startvideo(self):
 
-        cap = cv2.VideoCapture('udp://@0.0.0.0:11111')
-        cap.set(3, 960)  # set Width
-        cap.set(4, 720)  # set Height
+    def recieve(self):
+        cap = cv2.VideoCapture('udp://@0.0.0.0:11111?buffer_size=65535&fifo_size=188')
+        ret, frame = cap.read()
+        q.put(frame)
+        while ret:
+            ret, frame = cap.read()
+            q.put(frame)
 
+
+    def display(self):
         while True:
-            ret, img = cap.read()
-            img = cv2.flip(img, 1)
-
-            cv2.imshow('video', img)
+            if q.empty() != True:
+                frame = q.get()
+                cv2.imshow('frame1', frame)
 
             k = cv2.waitKey(30) & 0xff
             if k == 27:  # press 'ESC' to quit
                 break
-        cap.release()
-        cv2.destroyAllWindows()
+
+    # https://stackoverflow.com/questions/49233433/opencv-read-errorh264-0x8f915e0-error-while-decoding-mb-53-20-bytestream
+    # Solution to degraded video quality
+
